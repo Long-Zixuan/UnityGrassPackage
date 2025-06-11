@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Grass.Script
@@ -5,21 +6,35 @@ namespace Grass.Script
     [ExecuteInEditMode]
     public class GetPlayerPos : MonoBehaviour
     {
-        public GameObject player;
+        //public GameObject player;
+        
+        private GrassCollider[] _cols;
+        private List<Vector4> _poss = new List<Vector4>();
 
         public Material material;
 
         // Start is called before the first frame update
         void Start()
         {
-
+            _cols = GameObject.FindObjectsOfType<GrassCollider>();
         }
 
         // Update is called once per frame
         void Update()
         {
-            material.SetVector("_PlayerPos", player.transform.position);
-
+            _poss.Clear();
+            foreach (var col in _cols)
+            {
+                _poss.Add(new Vector4(col.gameObject.transform.position.x,col.gameObject.transform.position.y, col.gameObject.transform.position.z, col.radius));
+            }
+            if (_poss != null)
+            {
+                material.SetVectorArray("_Players",_poss.ToArray());
+            }
+            else
+            {
+                print("no player");
+            }
         }
     }
 }

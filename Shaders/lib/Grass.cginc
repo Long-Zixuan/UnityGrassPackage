@@ -1,4 +1,6 @@
 #include "UnityCG.cginc"
+// Upgrade NOTE: excluded shader from DX11 because it uses wrong array syntax (type[size] name)
+#pragma exclude_renderers d3d11
 #include "Autolight.cginc"
 #include "CustomTessellation.cginc"
 #include "UnityLightingCommon.cginc"
@@ -17,14 +19,16 @@ float2 _WindFrequency;
 
 float _WindStrength;
 
-float3 _PlayerPos;
-float _PlayerRadius;
+//float3 _PlayerPos;
+//float _PlayerRadius;
 
             
 float4 _TopColor;
 float4 _BottomColor;
 
 float _TranslucentGain;
+
+float4 _Players[100];
 
 // Simple noise function, sourced from http://answers.unity.com/answers/624136/view.html
 // Extended discussion on this function can be found at the following link:
@@ -85,7 +89,27 @@ float3x3 AngleAxis3x3(float angle, float3 axis)
 		t * x * z - s * y, t * y * z + s * x, t * z * z + c
 		);
 }
-	
+
+float4 nearestPlayer(float3 vetexPos)
+{
+	float4 res = float4(0,0,0,0);
+	float minDis = 100000;
+	for(int i = 0;i < 100;i++)
+	{
+		float3 pos = float3(_Players[i].x,_Players[i].y,_Players[i].z);
+		float3 disDir = pos-vetexPos;
+		if(length(disDir)<_Players[i].w)
+		{
+			return float4(pos,_Players[i].w);
+		}
+		if(length(disDir)<minDis)
+		{
+			minDis = length(disDir);
+			res = float4(pos,_Players[i].w);
+		}
+	}
+	return res;
+}
 [maxvertexcount(3)]
 void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOutput> triStream)
 {
@@ -103,11 +127,13 @@ void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOut
 
 	float3 worldPos = mul(unity_ObjectToWorld, float4(pos, 1)).xyz;
 	float2 uv = worldPos.xz * _WindDistortionMap_ST.xy + _WindDistortionMap_ST.zw + _WindFrequency * _Time.y;
-	
-	float3 playerDir = normalize(_PlayerPos - worldPos);
-	float playerDistance = distance(_PlayerPos, worldPos);
+	float4 Player = nearestPlayer(worldPos);
+	float3 PlayerPos = Player.xyz;
+	float PlayerRadius = Player.w;
+	float3 playerDir = normalize(PlayerPos - worldPos);
+	float playerDistance = distance(PlayerPos, worldPos);
 	float3 playerAixs = GetPerpendicularVector(playerDir);
-	float playerSample = max(_PlayerRadius - playerDistance,0);
+	float playerSample = max(PlayerRadius - playerDistance,0);
 	float3x3 playerRotationMatrix = AngleAxis3x3(UNITY_PI * playerSample, playerAixs);
 
 	float2 windSample = (tex2Dlod(_WindDistortionMap, float4(uv, 0, 0)).xy * 2 - 1) * _WindStrength;
@@ -131,6 +157,8 @@ void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOut
 	triStream.Append(VertexOutput(pos + mul(transformationMatrix, float3(0, 0, height)), float2(0.5, 1),localNormal));
 
 }
+	
+
 
 
 //LZX-Rider-2025-05-27-001

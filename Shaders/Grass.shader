@@ -20,9 +20,6 @@ Shader "Toon/Grass"
 		_WindFrequency("摆动频率（Wind Frequency）", Vector) = (0.05, 0.05, 0, 0)
     	
     	_WindStrength("风力强度（Wind Strength）", Float) = 1
-    	
-    	[HideInInspector]_PlayerPos("Player Position", Vector) = (0,0,0)
-    	_PlayerRadius("玩家碰撞体半径（Player Radius）",Float) = 1
     }
     
     SubShader
@@ -46,6 +43,7 @@ Shader "Toon/Grass"
 			#pragma target 4.6
             #pragma multi_compile_fwdbase
             #include "./lib/Grass.cginc"
+            
             float4 frag (grassGeometryOutput i,fixed facing : VFACE): SV_Target
 			{
 				float3 normal = facing > 0 ? i.normal : -i.normal;
@@ -56,9 +54,9 @@ Shader "Toon/Grass"
 				float3 ambient = ShadeSH9(float4(normal, 1));
 				float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
 				float4 col = lerp(_BottomColor, _TopColor * lightIntensity, i.uv.y);
-
 				return col;
 			}
+            
             ENDCG
         }
 		Pass
@@ -77,10 +75,12 @@ Shader "Toon/Grass"
 			#pragma target 4.6
 			#pragma multi_compile_shadowcaster
 			#include "./lib/Grass.cginc"
+			
 			float4 grassShadowfrag(grassGeometryOutput i) : SV_Target
 			{
 				SHADOW_CASTER_FRAGMENT(i)
 			}
+			
 			ENDCG
 		}
     }
