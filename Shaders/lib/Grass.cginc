@@ -63,11 +63,28 @@ grassGeometryOutput VertexOutput(float3 pos, float2 uv,float3 normal)
 
 float3 GetPerpendicularVector(float3 v)
 {
-    float3 perp = float3(-v.y, v.x, 0); // 简单交换 x 和 y
+	float3 perp = float3(-v.y, v.x, 0); // 简单交换 x 和 y
+
     if (length(perp) < 0.001) {         // 如果 perp 太小，调整 z 分量
         perp = float3(0, -v.z, v.y);
     }
-    return normalize(perp);
+	/*float3 perpXZ = float3(-v.z,0,v.x);
+	float3 perpYX = float3(-v.y, v.x, 0);
+	float3 perpYZ = float3(0, -v.z, v.y);
+	float lenXZ = length(perpXZ);
+	float lenYX = length(perpYX);
+	float lenYZ = length(perpYZ);
+	float minLen = min(lenXZ,min(lenYX,lenYZ));
+	if(minLen == lenXZ)
+	{
+		return normalize(perpXZ);
+	}
+	if(minLen == lenYX)
+	{
+		return normalize(perpYX);
+	}
+    return normalize(perpYZ);*/
+	return normalize(perp);
 }
 
 
@@ -132,7 +149,8 @@ void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOut
 	float PlayerRadius = Player.w;
 	float3 playerDir = normalize(PlayerPos - worldPos);
 	float playerDistance = distance(PlayerPos, worldPos);
-	float3 playerAixs = GetPerpendicularVector(playerDir);
+	float3 playerAixs = GetPerpendicularVector(float3(playerDir.x,playerDir.z,playerDir.y));
+	//float3 playerAixs = GetPerpendicularVector(playerDir);
 	float playerSample = max(PlayerRadius - playerDistance,0);
 	float3x3 playerRotationMatrix = AngleAxis3x3(UNITY_PI * playerSample, playerAixs);
 
