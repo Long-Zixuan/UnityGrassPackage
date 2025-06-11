@@ -25,7 +25,7 @@ namespace Grass.Script
             _poss.Clear();
             foreach (var col in _cols)
             {
-                _poss.Add(new Vector4(col.gameObject.transform.position.x,col.gameObject.transform.position.y, col.gameObject.transform.position.z, col.radius));
+                _poss.Add(new Vector4(col.Position.x,col.Position.y, col.Position.z, col.radius));
             }
             if (_poss != null)
             {
