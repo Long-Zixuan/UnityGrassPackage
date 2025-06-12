@@ -20,9 +20,6 @@ Shader "Toon/Grass"
 		_WindFrequency("摆动频率（Wind Frequency）", Vector) = (0.05, 0.05, 0, 0)
     	
     	_WindStrength("风力强度（Wind Strength）", Float) = 1
-    	
-    	[HideInInspector]_PlayerPos("Player Position", Vector) = (0,0,0)
-    	_PlayerRadius("玩家碰撞体半径（Player Radius）",Float) = 1
     }
     
     SubShader

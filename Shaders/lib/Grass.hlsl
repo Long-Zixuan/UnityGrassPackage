@@ -29,6 +29,7 @@ float4 _BottomColor;
 
 float _TranslucentGain;
 
+uniform float4 _Players[100];
 // Simple noise function, sourced from http://answers.unity.com/answers/624136/view.html
 // Extended discussion on this function can be found at the following link:
 // https://forum.unity.com/threads/am-i-over-complicating-this-random-function.454887/#post-2949326
@@ -89,14 +90,33 @@ float3x3 AngleAxis3x3(float angle, float3 axis)
 		t * x * z - s * y, t * y * z + s * x, t * z * z + c
 		);
 }
-	
+float4 nearestPlayer(float3 vetexPos)
+{
+	float4 res = float4(0,0,0,0);
+	float minDis = 100000;
+	for(int i = 0;i < 100;i++)
+	{
+		float3 pos = float3(_Players[i].x,_Players[i].y,_Players[i].z);
+		float3 disDir = pos-vetexPos;
+		if(length(disDir)<_Players[i].w)
+		{
+			return float4(pos,_Players[i].w);
+		}
+		if(length(disDir)<minDis)
+		{
+			minDis = length(disDir);
+			res = float4(pos,_Players[i].w);
+		}
+	}
+	return res;
+}
 [maxvertexcount(3)]
 void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOutput> triStream)
 {
-    float3 pos = IN[0].vertex.xyz;
+    float3 pos = IN[0].vertex;
 	float3 vNormal = IN[0].normal;
 	float4 vTangent = IN[0].tangent;
-	float3 vBinormal = cross(vNormal.xyz, vTangent.xyz) * vTangent.w;
+	float3 vBinormal = cross(vNormal, vTangent) * vTangent.w;
 	float3x3 tangentToLocal = float3x3(
 		vTangent.x, vBinormal.x, vNormal.x,
 		vTangent.y, vBinormal.y, vNormal.y,
@@ -107,18 +127,19 @@ void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOut
 
 	float3 worldPos = mul(unity_ObjectToWorld, float4(pos, 1)).xyz;
 	float2 uv = worldPos.xz * _WindDistortionMap_ST.xy + _WindDistortionMap_ST.zw + _WindFrequency * _Time.y;
-	
-	float3 playerDir = normalize(_PlayerPos - worldPos);
-	float playerDistance = distance(_PlayerPos, worldPos);
-	float3 playerAixs = GetPerpendicularVector(playerDir);
-	float playerSample = max(_PlayerRadius - playerDistance,0);
+	float4 Player = nearestPlayer(worldPos);
+	float3 PlayerPos = Player.xyz;
+	float PlayerRadius = Player.w;
+	float3 playerDir = normalize(PlayerPos - worldPos);
+	float playerDistance = distance(PlayerPos, worldPos);
+	float3 playerAixs = GetPerpendicularVector(float3(playerDir.x,playerDir.z,playerDir.y));
+	//float3 playerAixs = GetPerpendicularVector(playerDir);
+	float playerSample = max(PlayerRadius - playerDistance,0);
 	float3x3 playerRotationMatrix = AngleAxis3x3(UNITY_PI * playerSample, playerAixs);
 
 	float2 windSample = (tex2Dlod(_WindDistortionMap, float4(uv, 0, 0)).xy * 2 - 1) * _WindStrength;
-//	float2 windSample = (SAMPLE_TEXTURE2D(_WindDistortionMap,sampler_WindDistortionMap, uv).xy * 2 - 1) * _WindStrength;
-	
 	float3 wind = normalize(float3(windSample.x, windSample.y, 0));
-	float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample.x, wind);
+	float3x3 windRotation = AngleAxis3x3(UNITY_PI * windSample, wind);
 
 
     float3x3 transformationMatrix = mul(mul(mul(mul(tangentToLocal, windRotation),playerRotationMatrix), facingRotationMatrix), bendRotationMatrix);
