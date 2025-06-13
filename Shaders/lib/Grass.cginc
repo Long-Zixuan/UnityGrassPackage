@@ -1,6 +1,4 @@
 #include "UnityCG.cginc"
-// Upgrade NOTE: excluded shader from DX11 because it uses wrong array syntax (type[size] name)
-#pragma exclude_renderers d3d11
 #include "Autolight.cginc"
 #include "CustomTessellation.cginc"
 #include "UnityLightingCommon.cginc"
@@ -19,8 +17,8 @@ float2 _WindFrequency;
 
 float _WindStrength;
 
-//float3 _PlayerPos;
-//float _PlayerRadius;
+float3 _PlayerPos;
+float _PlayerRadius;
 
             
 float4 _TopColor;
@@ -28,7 +26,7 @@ float4 _BottomColor;
 
 float _TranslucentGain;
 
-float4 _Players[100];
+uniform float4 _Players[100];
 
 // Simple noise function, sourced from http://answers.unity.com/answers/624136/view.html
 // Extended discussion on this function can be found at the following link:
@@ -63,28 +61,11 @@ grassGeometryOutput VertexOutput(float3 pos, float2 uv,float3 normal)
 
 float3 GetPerpendicularVector(float3 v)
 {
-	float3 perp = float3(-v.y, v.x, 0); // 简单交换 x 和 y
-
+    float3 perp = float3(-v.y, v.x, 0); // 简单交换 x 和 y
     if (length(perp) < 0.001) {         // 如果 perp 太小，调整 z 分量
         perp = float3(0, -v.z, v.y);
     }
-	/*float3 perpXZ = float3(-v.z,0,v.x);
-	float3 perpYX = float3(-v.y, v.x, 0);
-	float3 perpYZ = float3(0, -v.z, v.y);
-	float lenXZ = length(perpXZ);
-	float lenYX = length(perpYX);
-	float lenYZ = length(perpYZ);
-	float minLen = min(lenXZ,min(lenYX,lenYZ));
-	if(minLen == lenXZ)
-	{
-		return normalize(perpXZ);
-	}
-	if(minLen == lenYX)
-	{
-		return normalize(perpYX);
-	}
-    return normalize(perpYZ);*/
-	return normalize(perp);
+    return normalize(perp);
 }
 
 
@@ -106,7 +87,7 @@ float3x3 AngleAxis3x3(float angle, float3 axis)
 		t * x * z - s * y, t * y * z + s * x, t * z * z + c
 		);
 }
-
+	
 float4 nearestPlayer(float3 vetexPos)
 {
 	float4 res = float4(0,0,0,0);
@@ -175,9 +156,6 @@ void grassGeo(triangle vertexOutput IN[3], inout TriangleStream<grassGeometryOut
 	triStream.Append(VertexOutput(pos + mul(transformationMatrix, float3(0, 0, height)), float2(0.5, 1),localNormal));
 
 }
-	
-
-
 
 //LZX-Rider-2025-05-27-001
 
