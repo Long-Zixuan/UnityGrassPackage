@@ -19,10 +19,6 @@ float4 _WindDistortionMap_ST;
 float2 _WindFrequency;
 
 float _WindStrength;
-
-float3 _PlayerPos;
-float _PlayerRadius;
-
             
 float4 _TopColor;
 float4 _BottomColor;
